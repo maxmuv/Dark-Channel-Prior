@@ -59,6 +59,20 @@ void HazeModel::RecoverImage(cv::Mat& result,
   if (result.size() != transmission.size())
     throw std::invalid_argument(
         "HazeModel::RecoverImage(...): incorrect size of result");
+  cv::Mat atmospheric_light_image(
+      transmission.size(), CV_64FC3,
+      atmospheric_light.at<cv::Vec<double, 3>>(0, 0));
+  cv::Mat t0_image(transmission.size(), CV_64FC1, cv::Vec<double, 1>(t0));
+  cv::Mat transmission_low_bounded_t0(transmission.size(), CV_64FC1);
+  cv::max(transmission, t0_image, transmission_low_bounded_t0);
+  cv::Mat transmission_low_bounded_t0_c3;
+  cv::Mat channels[3] = {transmission_low_bounded_t0,
+                         transmission_low_bounded_t0,
+                         transmission_low_bounded_t0};
+  cv::merge(channels, 3, transmission_low_bounded_t0_c3);
+  result = (observed_intensity - atmospheric_light_image)
+               .mul(1. / transmission_low_bounded_t0_c3) +
+           atmospheric_light_image;
 }
 
 }  // namespace haze
