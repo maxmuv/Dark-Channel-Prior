@@ -67,10 +67,10 @@ TEST_CASE_FIXTURE(HazeModelFixture, "HazeModelConstructor1") {
         [&]() { new haze::HazeModel(t_transmission, f_atmospheric_light); }(),
         "HazeModel::HazeModel(...): incorrect matrices' sizes",
         const std::invalid_argument&);
-    cv::Mat t_transmission(1, 2, CV_64FC1);
+    cv::Mat new_size_transmission(1, 2, CV_64FC1);
     CHECK_NOTHROW([&]() {
       haze::HazeModel* ptr =
-          new haze::HazeModel(t_transmission, t_atmospheric_light);
+          new haze::HazeModel(new_size_transmission, t_atmospheric_light);
       delete ptr;
     }());
   }

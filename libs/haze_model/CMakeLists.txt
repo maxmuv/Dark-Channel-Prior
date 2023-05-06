@@ -5,4 +5,4 @@ add_library(HazeModel
 )
 target_link_libraries(HazeModel ${OpenCV_LIBS})
 add_executable(test_haze_model test_haze_model.cpp)
-target_link_libraries(test_haze_model HazeModel doctest ${OpenCV_LIBS})
+target_link_libraries(test_haze_model HazeModel ${OpenCV_LIBS})
