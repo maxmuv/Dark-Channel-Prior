@@ -6,6 +6,9 @@
 
 namespace haze {
 
+void CreateTransmission(cv::Mat &transmission, const cv::Mat &depth_map,
+                        const double beta);
+
 class HazeModel {
  private:
   cv::Mat transmission;
