@@ -46,7 +46,7 @@ TEST_CASE("1x1 matrix") {
 TEST_CASE("1x2 matrix") {
   cv::Mat depth(1, 2, CV_64FC1, cv::Scalar(1.0, 0.0));
   double beta = 1;
-  cv::Mat transmission(1, 1, CV_64FC1);
+  cv::Mat transmission(1, 2, CV_64FC1);
   REQUIRE_NOTHROW(haze::CreateTransmission(transmission, depth, beta));
   cv::Mat ideal(1, 2, CV_64FC1, cv::Scalar(exp(-1.0), 1.0));
   CHECK(IsDoubleMatsEqual(transmission, ideal));

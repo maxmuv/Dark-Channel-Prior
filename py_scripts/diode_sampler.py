@@ -39,8 +39,9 @@ def convert_numpy_map_to_img(p):
 	MAX_DEPTH = min(300, np.percentile(de, 99))
 	de = np.clip(de, MIN_DEPTH, MAX_DEPTH)
 	filled_de = np.ma.array(de, mask=~validity_mask)
-	filled_de = filled_de.filled(2*MAX_DEPTH)
-	de_int = np.interp(filled_de, [filled_de.min(), filled_de.max()], [0, 255])
+	filled_de = filled_de.filled(MAX_DEPTH)
+	de_int = filled_de / filled_de.max() * 255
+	#de_int = np.interp(filled_de, [filled_de.min(), filled_de.max()], [255*filled_de.min()/filled_de.max(), 255])
 	return Image.fromarray(np.uint8(de_int), 'L')
 
 if __name__ == "__main__":

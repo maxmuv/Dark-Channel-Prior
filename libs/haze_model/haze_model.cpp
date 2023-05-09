@@ -75,4 +75,15 @@ void HazeModel::RecoverImage(cv::Mat& result,
            atmospheric_light_image;
 }
 
+void CreateTransmission(cv::Mat& transmission, const cv::Mat& depth_map,
+                        const double beta) {
+  if (transmission.size() != depth_map.size())
+    throw std::invalid_argument(
+        "CreateTransmission(...): incorrect sizes of matrices");
+  if (transmission.type() != depth_map.type())
+    throw std::invalid_argument(
+        "CreateTransmission(...): incorrect types of matrices");
+  cv::exp(-beta * depth_map, transmission);
+}
+
 }  // namespace haze
