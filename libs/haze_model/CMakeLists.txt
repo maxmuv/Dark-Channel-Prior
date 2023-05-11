@@ -13,4 +13,9 @@ target_link_libraries(test_transmission_creation HazeModel ${OpenCV_LIBS})
 
 add_executable(test_sample test_sample.cpp)
 add_definitions(-DCSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}\")
-target_link_libraries(test_sample HazeModel ${OpenCV_LIBS})
+target_link_libraries(test_sample HazeModel ${OpenCV_LIBS} ImageLoader)
+
+enable_testing()
+add_test(NAME test_haze_model COMMAND test_haze_model)
+add_test(NAME test_transmission_creation COMMAND test_transmission_creation)
+add_test(NAME test_sample COMMAND test_sample)

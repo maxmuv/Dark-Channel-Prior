@@ -31,3 +31,8 @@ include_directories(
 add_subdirectory(thirdparty)
 add_subdirectory(libs)
 add_subdirectory(apps)
+
+install(TARGETS HazeMachine DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+#install(DIRECTORY HazeMachine DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+enable_testing()

@@ -2,15 +2,18 @@
 #include <doctest.h>
 
 #include <haze_model.hpp>
+#include <image_loader.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 
 TEST_CASE("Sample") {
-  cv::Mat img = cv::imread(std::string(CSDIR) +
-                           "/sample/00022_00193_outdoor_000_000.png");
-  cv::Mat map = cv::imread(std::string(CSDIR) +
-                           "/sample/00022_00193_outdoor_000_000_depth.png");
+  load::PathWrapper img_path(std::string(CSDIR) +
+                             "/sample/00022_00193_outdoor_000_000.png");
+  cv::Mat img = cv::imread(img_path.ToString());
+  load::PathWrapper map_path(std::string(CSDIR) +
+                             "/sample/00022_00193_outdoor_000_000_depth.png");
+  cv::Mat map = cv::imread(map_path.ToString());
   CHECK_EQ(cv::Size(1024, 768), img.size());
   CHECK_EQ(cv::Size(1024, 768), map.size());
   CHECK_EQ(img.type(), CV_8UC3);
