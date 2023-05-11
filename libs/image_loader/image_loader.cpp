@@ -45,7 +45,7 @@ cv::Mat LoadImg(const PathWrapper& path) {
 }
 
 cv::Mat LoadImgUTF8(const PathWrapper& path) {
-  std::ifstream file(path.ToString(), std::ios::binary);
+  std::ifstream file(path.path, std::ios::binary);
   file.unsetf(std::ios::skipws);
 
   std::streampos size;
