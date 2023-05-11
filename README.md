@@ -17,15 +17,13 @@
 
     cmake ..
 
-    make 
-
-    make install
+    cmake --build . --target install --config Release
 ```
 
 В директории *build* должна появиться основная программа *HazeMachine[.exe]*. Стоит также перед запуском убедиться, что проходят тесты:
 
 ```console
-    make test
+    ctest -C Release
 ```
 
 ### Составные части проекта
