@@ -10,14 +10,12 @@ static bool IsDoubleMatsEqual(const cv::Mat& lhs, const cv::Mat& rhs) {
   double result = true;
   for (int i = 0; i < lhs.rows; ++i) {
     for (int j = 0; j < rhs.cols; ++j) {
-      cv::Vec3d l = lhs.at<cv::Vec3d>(i, j);
-      cv::Vec3d r = rhs.at<cv::Vec3d>(i, j);
-      for (int c = 0; c < 3; ++c) {
-        double max_l_r_1 = std::max({1.0, fabs(r[c]), fabs(l[c])});
-        if (fabs(l[c] - r[c]) >
-            max_l_r_1 * std::numeric_limits<double>::epsilon()) {
-          result = false;
-        }
+      double l = lhs.at<double>(i, j);
+      double r = rhs.at<double>(i, j);
+      double max_l_r_1 = std::max({1.0, fabs(r), fabs(l)});
+      if (fabs(l - r) >
+          max_l_r_1 * std::numeric_limits<double>::epsilon()) {
+        result = false;
       }
     }
   }
@@ -44,10 +42,12 @@ TEST_CASE("1x1 matrix") {
 }
 
 TEST_CASE("1x2 matrix") {
-  cv::Mat depth(1, 2, CV_64FC1, cv::Scalar(1.0, 0.0));
+  cv::Mat depth(1, 2, CV_64FC1, cv::Scalar(1.0));
+  depth.at<double>(0, 1) = 0.0;
   double beta = 1;
   cv::Mat transmission(1, 2, CV_64FC1);
   REQUIRE_NOTHROW(haze::CreateTransmission(transmission, depth, beta));
   cv::Mat ideal(1, 2, CV_64FC1, cv::Scalar(exp(-1.0), 1.0));
+  ideal.at<double>(0, 1) = 1.0;
   CHECK(IsDoubleMatsEqual(transmission, ideal));
 }

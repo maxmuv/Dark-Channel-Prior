@@ -8,7 +8,7 @@ bool PathWrapper::operator<(const PathWrapper& rhs) const {
                                       rhs.name.begin(), rhs.name.end());
 }
 
-void PathWrapper::UpdateName() { name = path.filename(); }
+void PathWrapper::UpdateName() { name = path.filename().u8string(); }
 
 std::vector<PathWrapper> LoadDir(const PathWrapper& path) {
   if (!fs::exists(path.path))

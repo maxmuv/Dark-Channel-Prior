@@ -12,7 +12,7 @@ struct PathWrapper {
   PathWrapper() = default;
   PathWrapper(const std::string& str) : path(str) {}
   void UpdateName();
-  const std::string ToString() const { return static_cast<std::string>(path); }
+  const std::string ToString() const { return static_cast<std::string>(path.u8string()); }
   fs::path path;
   std::string name;
   bool operator<(const PathWrapper& rhs) const;

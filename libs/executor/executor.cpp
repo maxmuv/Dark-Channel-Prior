@@ -60,6 +60,7 @@ cv::Mat Executor::Augment() const {
   haze::HazeModel model(transmission, atmospheric_light);
   cv::Mat result(img.size(), CV_64FC3);
   model.AugmentImage(result, img);
+  return result;
 }
 cv::Mat Executor::Dehaze() const { return cv::Mat(img.size(), CV_64FC3); }
 
