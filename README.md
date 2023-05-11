@@ -9,11 +9,7 @@
 ```console
     git clone https://github.com/maxmuv/Dark-Channel-Prior.git
     
-    cd Dark-Channel-Prior
-
-    mkdir build 
-
-    cd build
+    cd Dark-Channel-Prior/build
 
     cmake ..
 
