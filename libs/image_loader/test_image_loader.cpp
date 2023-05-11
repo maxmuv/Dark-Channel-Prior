@@ -11,3 +11,8 @@ TEST_CASE("ImageLoader") {
   std::vector<std::string> names({"1.txt", "2.txt", "3.txt"});
   for (int i = 0; i < 3; ++i) CHECK_EQ(names[i], result[i].name);
 }
+
+TEST_CASE("LoadImg") {
+  load::PathWrapper input(std::string(CSDIR) + "/test_dir");
+  std::vector<load::PathWrapper> result;
+}

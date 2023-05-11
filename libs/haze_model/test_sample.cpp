@@ -1,33 +1,21 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 
+#include <fstream>
 #include <haze_model.hpp>
 #include <image_loader.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
-#include <fstream>
 
 TEST_CASE("Sample") {
   load::PathWrapper img_path(std::string(CSDIR) +
                              "/sample/00022_00193_outdoor_000_000.png");
   // loading with utf-8
-  std::ifstream img_file(img_path.ToString(), std::iostream::binary);
-  std::filebuf* img_pbuf = img_file.rdbuf();
-  size_t img_size = static_cast<size_t>(img_pbuf->pubseekoff(0, img_file.end, img_file.in));
-  img_pbuf->pubseekpos(0, img_file.in);
-  std::vector<uchar> img_buffer(img_size);
-  img_pbuf->sgetn((char*)img_buffer.data(), img_size);
-  cv::Mat img = cv::imdecode(img_buffer, cv::IMREAD_COLOR);
+  cv::Mat img = load::LoadImgUTF8(img_path);
   load::PathWrapper map_path(std::string(CSDIR) +
                              "/sample/00022_00193_outdoor_000_000_depth.png");
-  std::ifstream map_file(map_path.ToString(), std::iostream::binary);
-  std::filebuf* map_pbuf = map_file.rdbuf();
-  size_t map_size = static_cast<size_t>(map_pbuf->pubseekoff(0, map_file.end, map_file.in));
-  map_pbuf->pubseekpos(0, map_file.in);
-  std::vector<uchar> map_buffer(map_size);
-  map_pbuf->sgetn((char*)map_buffer.data(), map_size);
-  cv::Mat map = cv::imdecode(map_buffer, cv::IMREAD_COLOR);
+  cv::Mat map = load::LoadImgUTF8(map_path);
   CHECK_EQ(cv::Size(1024, 768), img.size());
   CHECK_EQ(cv::Size(1024, 768), map.size());
   CHECK_EQ(img.type(), CV_8UC3);
