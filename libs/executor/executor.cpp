@@ -1,15 +1,18 @@
 #include <algorithm>
 #include <executor.hpp>
 #include <haze_model.hpp>
+#include <image_loader/image_loader.hpp>
+#include <iostream>
 #include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <stdexcept>
 
 namespace exec {
 
 Executor::Executor(const std::vector<cv::Mat>& images, const ProcessType type)
-    : beta(0.5, 4.0),
-      atmospheric_light_val(0.0, 1.0),
+    : beta(1.5, 3.0),
+      atmospheric_light_val(0.3, 0.7),
       gen(std::random_device()()),
       type(type) {
   if (images.size() <= static_cast<size_t>(type))
@@ -63,5 +66,64 @@ cv::Mat Executor::Augment() const {
   return result;
 }
 cv::Mat Executor::Dehaze() const { return cv::Mat(img.size(), CV_64FC3); }
+
+static std::string ResultErrorMessage(const std::string& lwhat,
+                                      const std::string& rwhat) {
+  return lwhat + rwhat + "\n";
+}
+
+void Produce(const std::vector<std::string>& input_pathes,
+             std::string& result_path) {
+  std::vector<load::PathWrapper> images_pathes;
+  std::vector<load::PathWrapper> depth_map_pathes;
+
+  ProcessType type = DEHAZING;
+
+  try {
+    images_pathes = load::LoadDir(input_pathes.front());
+    if (input_pathes.size() > 1) {
+      type = AUGMENTING;
+      depth_map_pathes = load::LoadDir(input_pathes[1]);
+    }
+  } catch (const std::exception& ex) {
+    throw std::runtime_error(ResultErrorMessage(
+        "Produce(): cannot load content of input dirs:\n", ex.what()));
+  }
+
+  size_t size = images_pathes.size();
+  if (depth_map_pathes.size() != size)
+    throw std::runtime_error(
+        "Produce(): input dirs has different numbers of files\n");
+
+  load::PathWrapper result(result_path);
+  try {
+    if (!result.Empty())
+      throw std::runtime_error("Produce(): result dir isn't empty");
+  } catch (const std::exception& ex) {
+    throw std::runtime_error(
+        ResultErrorMessage("Produce(): incorrect result dir:\n", ex.what()));
+  }
+
+  try {
+    for (size_t i = 0; i < size; ++i) {
+      if (images_pathes[i].name != depth_map_pathes[i].name)
+        throw std::runtime_error("Produce(): files must have equal filename");
+      std::string name = images_pathes[i].name;
+      std::vector<cv::Mat> images{load::LoadImg(images_pathes[i])};
+      if (type == AUGMENTING)
+        images.push_back(load::LoadImg(depth_map_pathes[i]));
+      Executor ex(images, type);
+      cv::Mat result_image = ex.Process();
+      load::PathWrapper result_file_path;
+      result_file_path.path = result.path / name;
+      cv::Mat ui_result_image;
+      result_image.convertTo(ui_result_image, CV_8UC3, 255.);
+      cv::imwrite(result_file_path.ToString(), ui_result_image);
+    }
+  } catch (const std::exception& ex) {
+    throw std::runtime_error(ResultErrorMessage(
+        "Produce(): cannot augment/dehaze image:\n", ex.what()));
+  }
+}
 
 }  // namespace exec

@@ -16,6 +16,16 @@ struct PathWrapper {
   const std::string ToString() const {
     return static_cast<std::string>(path.u8string());
   }
+  bool Empty() const {
+    int i = 0;
+    if (!fs::exists(path))
+      throw std::runtime_error("Empty(...): path doesn't exist");
+    if (!fs::is_directory(path))
+      throw std::runtime_error("Empty(...): path isn't a dir");
+    for (auto const& dir_entry : fs::directory_iterator{path}) ++i;
+    if (i > 0) return false;
+    return true;
+  }
   fs::path path;
   std::string name;
   bool operator<(const PathWrapper& rhs) const;

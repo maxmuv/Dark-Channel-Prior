@@ -41,7 +41,10 @@ cv::Mat LoadImg(const PathWrapper& path) {
   if (result.empty()) {
     throw std::runtime_error("LoadImg(...): a path isn't Unicode");
   }
-  return result;
+  // converting img to right format
+  cv::Mat right_result;
+  result.convertTo(right_result, CV_64FC3, 1.0 / 255.0);
+  return right_result;
 }
 
 cv::Mat LoadImgUTF8(const PathWrapper& path) {

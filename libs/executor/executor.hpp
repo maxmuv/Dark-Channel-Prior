@@ -26,15 +26,18 @@ class Executor {
   ~Executor() = default;
 
  private:
-  double min_depth_val = 0.2;
-  mutable std::uniform_real_distribution<> beta;  // (0.5, 4.0);
+  double min_depth_val = 0.3;
+  mutable std::uniform_real_distribution<> beta;  // (1.5, 3.0);
   mutable std::uniform_real_distribution<>
-      atmospheric_light_val;  // (0.0, 1.0);
+      atmospheric_light_val;  // (0.3, 0.7);
   mutable std::mt19937 gen;
   cv::Mat img;
   cv::Mat depth_map;
   const ProcessType type;
 };
+
+void Produce(const std::vector<std::string>& input_pathes,
+             std::string& result_path);
 
 }  // namespace exec
 #endif  // EXECUTOR_HPP

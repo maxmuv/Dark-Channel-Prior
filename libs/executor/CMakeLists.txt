@@ -1,7 +1,7 @@
 project(executor)
 
 add_library(Executor executor.hpp executor.cpp)
-target_link_libraries(Executor HazeModel)
+target_link_libraries(Executor HazeModel ImageLoader)
 
 add_executable(test_executor test_executor.cpp)
 target_link_libraries(test_executor Executor)
