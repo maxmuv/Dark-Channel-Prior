@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <dcp.hpp>
 #include <executor.hpp>
 #include <haze_model.hpp>
 #include <image_loader/image_loader.hpp>
@@ -65,7 +66,15 @@ cv::Mat Executor::Augment() const {
   model.AugmentImage(result, img);
   return result;
 }
-cv::Mat Executor::Dehaze() const { return cv::Mat(img.size(), CV_64FC3); }
+cv::Mat Executor::Dehaze() const {
+  cv::Mat atmospheric_light = dcp::EstimateAtmospericLight(img, 15);
+  cv::Mat transmission = dcp::EstimateTransmission(img, atmospheric_light, 15);
+  // cv::Mat matting_tr = dcp::SoftMatting(transmission, img, 41, 0.01);
+  haze::HazeModel model(transmission, atmospheric_light);
+  cv::Mat result(img.size(), CV_64FC3);
+  model.RecoverImage(result, img);
+  return result;
+}
 
 static std::string ResultErrorMessage(const std::string& lwhat,
                                       const std::string& rwhat) {
@@ -91,7 +100,7 @@ void Produce(const std::vector<std::string>& input_pathes,
   }
 
   size_t size = images_pathes.size();
-  if (depth_map_pathes.size() != size)
+  if (depth_map_pathes.size() != size && type == AUGMENTING)
     throw std::runtime_error(
         "Produce(): input dirs has different numbers of files\n");
 
@@ -106,12 +115,13 @@ void Produce(const std::vector<std::string>& input_pathes,
 
   try {
     for (size_t i = 0; i < size; ++i) {
-      if (images_pathes[i].name != depth_map_pathes[i].name)
-        throw std::runtime_error("Produce(): files must have equal filename");
       std::string name = images_pathes[i].name;
       std::vector<cv::Mat> images{load::LoadImg(images_pathes[i])};
-      if (type == AUGMENTING)
+      if (type == AUGMENTING) {
+        if (images_pathes[i].name != depth_map_pathes[i].name)
+          throw std::runtime_error("Produce(): files must have equal filename");
         images.push_back(load::LoadImg(depth_map_pathes[i]));
+      }
       Executor ex(images, type);
       cv::Mat result_image = ex.Process();
       load::PathWrapper result_file_path;
