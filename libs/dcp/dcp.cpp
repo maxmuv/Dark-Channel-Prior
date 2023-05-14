@@ -151,7 +151,7 @@ cv::Mat EstimateAtmospericLight(const cv::Mat& hazy_image, const int patch_size,
         "dark_channel");
 
   struct coordval {
-    coordval(const int i, const int j, const double val, const cv::Scalar& pix)
+    coordval(const int i, const int j, const double val, const cv::Vec3d& pix)
         : i(i), j(j), val(val) {
       intensity = pix[0] + pix[1] + pix[2];
     }
@@ -166,7 +166,7 @@ cv::Mat EstimateAtmospericLight(const cv::Mat& hazy_image, const int patch_size,
   for (int i = 0; i < dark_channel.rows; ++i) {
     for (int j = 0; j < dark_channel.cols; ++j) {
       pixel_intensities.emplace_back(i, j, dark_channel.at<double>(i, j),
-                                     hazy_image_clone.at<cv::Scalar>(i, j));
+                                     hazy_image_clone.at<cv::Vec3d>(i, j));
     }
   }
   std::stable_sort(pixel_intensities.begin(), pixel_intensities.end(),
