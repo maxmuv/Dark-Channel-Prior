@@ -144,6 +144,12 @@ cv::Mat EstimateAtmospericLight(const cv::Mat& hazy_image, const int patch_size,
     throw std::invalid_argument(
         "EstimateAtmospericLight(...): brightest_share is out of range");
   cv::Mat dark_channel = DarkChannel(hazy_image, patch_size);
+
+  if (dark_channel.size() != hazy_image.size())
+    throw std::invalid_argument(
+        "EstimateAtmospericLight(...): size of hazy_image is not equal size of "
+        "dark_channel");
+
   struct coordval {
     coordval(const int i, const int j, const double val, const cv::Scalar& pix)
         : i(i), j(j), val(val) {
@@ -155,11 +161,12 @@ cv::Mat EstimateAtmospericLight(const cv::Mat& hazy_image, const int patch_size,
     double intensity;
   };
 
+  cv::Mat hazy_image_clone = hazy_image.clone();
   std::vector<coordval> pixel_intensities;
   for (int i = 0; i < dark_channel.rows; ++i) {
     for (int j = 0; j < dark_channel.cols; ++j) {
       pixel_intensities.emplace_back(i, j, dark_channel.at<double>(i, j),
-                                     hazy_image.at<cv::Scalar>(i, j));
+                                     hazy_image_clone.at<cv::Scalar>(i, j));
     }
   }
   std::stable_sort(pixel_intensities.begin(), pixel_intensities.end(),
@@ -184,7 +191,8 @@ cv::Mat EstimateAtmospericLight(const cv::Mat& hazy_image, const int patch_size,
   for (int i = 0; i < border; ++i) {
     auto& coords = pixel_intensities[i];
     if (comp_float(max_intensity, coords.intensity)) {
-      atmospheric_light_val += hazy_image.at<cv::Scalar>(coords.i, coords.j);
+      atmospheric_light_val +=
+          hazy_image_clone.at<cv::Scalar>(coords.i, coords.j);
       ++al_num;
     }
   }
