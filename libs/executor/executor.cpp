@@ -69,8 +69,8 @@ cv::Mat Executor::Augment() const {
 cv::Mat Executor::Dehaze() const {
   cv::Mat atmospheric_light = dcp::EstimateAtmospericLight(img, 15);
   cv::Mat transmission = dcp::EstimateTransmission(img, atmospheric_light, 15);
-  // cv::Mat matting_tr = dcp::SoftMatting(transmission, img, 41, 0.01);
-  haze::HazeModel model(transmission, atmospheric_light);
+  cv::Mat matting_tr = dcp::SoftMatting(transmission, img, 51, 0.01);
+  haze::HazeModel model(matting_tr, atmospheric_light);
   cv::Mat result(img.size(), CV_64FC3);
   model.RecoverImage(result, img);
   return result;

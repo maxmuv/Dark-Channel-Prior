@@ -6,6 +6,10 @@
 
 namespace dcp {
 
+cv::Mat SoftMatting(const cv::Mat& transmission, const cv::Mat& hazy_image,
+                    const int patch_size, const double eps,
+                    const double lambda = 1e-4);
+
 cv::Mat DarkChannel(const cv::Mat& image, const int patch_size);
 
 cv::Mat EstimateTransmission(const cv::Mat& hazy_image,

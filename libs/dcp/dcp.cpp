@@ -49,88 +49,40 @@ cv::Mat EstimateTransmission(const cv::Mat& hazy_image,
          omega * DarkChannel(norm_hazy_image_by_al, patch_size);
 }
 
-/*
 cv::Mat SoftMatting(const cv::Mat& transmission, const cv::Mat& hazy_image,
                     const int patch_size, const double eps,
                     const double lambda) {
-  cv::Mat result(transmission.size(), transmission.type());
-  for (int i = 0; i < transmission.rows; ++i) {
-    for (int j = 0; j < transmission.cols; ++j) {
-      int win_y1 = std::min(i + patch_size / 2, transmission.rows);
-      int win_x1 = std::min(j + patch_size / 2, transmission.cols);
-      int win_x0 = std::max(j - patch_size / 2, 0);
-      int win_y0 = std::max(i - patch_size / 2, 0);
-      int center_x = i - win_x0;
-      int center_y = j - win_y0;
-      cv::Mat tr_reg =
-          transmission(cv::Range(win_y0, win_y1), cv::Range(win_x0, win_x1));
-      cv::Mat ha_reg =
-          hazy_image(cv::Range(win_y0, win_y1), cv::Range(win_x0, win_x1));
-      std::vector<cv::Mat> ha_reg_ch;
-      cv::split(ha_reg, ha_reg_ch);
+  /*
+  cv::Mat mean_i(hazy_image.size(), CV_64FC3);
+  cv::boxFilter(hazy_image, mean_i, -1, cv::Size(patch_size, patch_size));
+  cv::Mat mean_ii(hazy_image.size(), CV_64FC3);
+  cv::boxFilter(hazy_image.mul(hazy_image), mean_ii, -1,
+                cv::Size(patch_size, patch_size));
 
-      cv::Mat L(tr_reg.size(), CV_64FC1, cv::Scalar(0));
-      cv::Mat mean(1, 3, CV_64FC1);
-      mean.at<double>(0, 0) = cv::mean(ha_reg_ch[0])[0];
-      mean.at<double>(0, 1) = cv::mean(ha_reg_ch[1])[0];
-      mean.at<double>(0, 2) = cv::mean(ha_reg_ch[2])[0];
-      cv::Mat mean_1;
-      cv::transpose(mean, mean_1);
-      cv::Mat covar(3, 3, CV_64FC1);
-      covar.at<double>(0, 0) =
-          cv::mean(ha_reg_ch[0].mul(ha_reg_ch[0]) -
-                   mean.at<double>(0, 0) * mean.at<double>(0, 0))[0] +
-          eps / (tr_reg.cols * tr_reg.rows);
-      covar.at<double>(0, 1) =
-          cv::mean(ha_reg_ch[0].mul(ha_reg_ch[1]) -
-                   mean.at<double>(0, 0) * mean.at<double>(0, 1))[0];
-      covar.at<double>(0, 2) =
-          cv::mean(ha_reg_ch[0].mul(ha_reg_ch[2]) -
-                   mean.at<double>(0, 0) * mean.at<double>(0, 2))[0];
-      covar.at<double>(1, 0) =
-          cv::mean(ha_reg_ch[1].mul(ha_reg_ch[0]) -
-                   mean.at<double>(0, 1) * mean.at<double>(0, 0))[0];
-      covar.at<double>(1, 1) =
-          cv::mean(ha_reg_ch[1].mul(ha_reg_ch[1]) -
-                   mean.at<double>(1, 0) * mean.at<double>(0, 1))[0] +
-          eps / (tr_reg.cols * tr_reg.rows);
-      covar.at<double>(1, 2) =
-          cv::mean(ha_reg_ch[1].mul(ha_reg_ch[2]) -
-                   mean.at<double>(0, 1) * mean.at<double>(0, 2))[0];
-      covar.at<double>(2, 0) =
-          cv::mean(ha_reg_ch[2].mul(ha_reg_ch[0]) -
-                   mean.at<double>(0, 1) * mean.at<double>(0, 0))[0];
-      covar.at<double>(2, 1) =
-          cv::mean(ha_reg_ch[2].mul(ha_reg_ch[1]) -
-                   mean.at<double>(1, 0) * mean.at<double>(0, 1))[0];
-      covar.at<double>(2, 2) =
-          cv::mean(ha_reg_ch[2].mul(ha_reg_ch[2]) -
-                   mean.at<double>(0, 1) * mean.at<double>(0, 2))[0] +
-          eps / (tr_reg.cols * tr_reg.rows);
-      for (int Li = 0; Li < tr_reg.cols; ++Li) {
-        for (int Lj = 0; Lj < tr_reg.rows; ++Lj) {
-          if (Li == Lj) {
-            L.at<double>(Li, Lj) += (1. + lambda);
-          }
-          cv::Mat pix(1, 3, CV_64FC1);
-          pix.at<double>(0, 0) = ha_reg_ch[0].at<double>(Li, Lj);
-          pix.at<double>(0, 1) = ha_reg_ch[1].at<double>(Li, Lj);
-          pix.at<double>(0, 2) = ha_reg_ch[2].at<double>(Li, Lj);
-          cv::Mat pix_1;
-          cv::transpose(pix, pix_1);
-          cv::Mat expr = ((pix - mean) * covar.inv() * (pix_1 - mean_1));
-          std::cout << expr;
-          L.at<double>(Li, Lj) -=
-              1. / (tr_reg.cols * tr_reg.rows) * (1 + expr.at<double>(0, 0));
-        }
-      }
-      cv::Mat res;
-      cv::solve(L, lambda * tr_reg, res);
-      res
-    }
-  }
+  cv::Mat cov = mean_ii - mean_i.mul(mean_i);
+  cv::Mat cov_eps = cov + cv::Mat(hazy_image.size(), CV_64FC3,
+                                  cv::Scalar(eps / (patch_size * patch_size),
+                                             eps / (patch_size * patch_size),
+                                             eps / (patch_size * patch_size)));
+  cv::Mat L(hazy_image.size(), CV_64FC3);
+  cv::boxFilter(
+      -1 * (cv::Mat(hazy_image.size(), CV_64FC3, cv::Scalar(1., 1., 1.)) +
+            (hazy_image - mean_i).mul(hazy_image - mean_i).mul(1 / cov_eps)),
+      L, -1, cv::Size(patch_size, patch_size));
+  cv::Mat div = (cv::Mat(hazy_image.size(), CV_64FC3,
+                         cv::Scalar(patch_size, patch_size, patch_size)) +
+                 L);
+  std::vector<cv::Mat> div_channels;
+  cv::split(div, div_channels);
+  cv::Mat res_div =
+      div_channels[0].mul(div_channels[1]).mul(div_channels[1]) +
+      cv::Mat(transmission.size(), CV_64FC1, cv::Scalar(lambda * patch_size));
+  cv::Mat result = transmission + transmission.mul(1 / (res_div * lambda));
+  return result;*/
+  cv::Mat result(transmission.size(), CV_64FC1);
+  cv::boxFilter(transmission, result, -1, cv::Size(patch_size, patch_size));
   return result;
-}*/
+}
 
 cv::Mat EstimateAtmospericLight(const cv::Mat& hazy_image, const int patch_size,
                                 const double brightest_share) {
@@ -163,6 +115,7 @@ cv::Mat EstimateAtmospericLight(const cv::Mat& hazy_image, const int patch_size,
 
   cv::Mat hazy_image_clone = hazy_image.clone();
   std::vector<coordval> pixel_intensities;
+  pixel_intensities.reserve(dark_channel.rows * dark_channel.cols);
   for (int i = 0; i < dark_channel.rows; ++i) {
     for (int j = 0; j < dark_channel.cols; ++j) {
       pixel_intensities.emplace_back(i, j, dark_channel.at<double>(i, j),
