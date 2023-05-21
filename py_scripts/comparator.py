@@ -16,6 +16,8 @@ def recursive_dir_traversal(input_dir):
 		if p.is_dir():
 			to_merge = recursive_dir_traversal(p)
 			result.extend(to_merge)
+		elif p.name.find("_tr") != -1 or p.name.find("_dc") != -1:
+			continue
 		else:
 			result.append(p)
 	return result
