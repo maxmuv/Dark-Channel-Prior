@@ -18,11 +18,11 @@ class Executor {
   Executor& operator=(const Executor&) = delete;
   Executor& operator=(Executor&&) = delete;
   cv::Mat Augment() const;
-  cv::Mat Dehaze() const;
+  std::vector<cv::Mat> Dehaze() const;
 
  public:
   Executor(const std::vector<cv::Mat>& images, const ProcessType type);
-  cv::Mat Process() const;
+  std::vector<cv::Mat> Process() const;
   ~Executor() = default;
 
  private:

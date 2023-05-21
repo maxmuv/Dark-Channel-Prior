@@ -41,10 +41,12 @@ Executor::Executor(const std::vector<cv::Mat>& images, const ProcessType type)
   }
 }
 
-cv::Mat Executor::Process() const {
-  if (type == AUGMENTING)
-    return Augment();
-  else
+std::vector<cv::Mat> Executor::Process() const {
+  if (type == AUGMENTING) {
+    std::vector<cv::Mat> res;
+    res.push_back(Augment());
+    return res;
+  } else
     return Dehaze();
 }
 
@@ -66,14 +68,18 @@ cv::Mat Executor::Augment() const {
   model.AugmentImage(result, img);
   return result;
 }
-cv::Mat Executor::Dehaze() const {
+std::vector<cv::Mat> Executor::Dehaze() const {
+  std::vector<cv::Mat> res;
+  res.push_back(dcp::DarkChannel(img, 15));
   cv::Mat atmospheric_light = dcp::EstimateAtmospericLight(img, 15);
   cv::Mat transmission = dcp::EstimateTransmission(img, atmospheric_light, 15);
+  res.push_back(transmission);
   cv::Mat matting_tr = dcp::SoftMatting(transmission, img, 51, 0.01);
   haze::HazeModel model(matting_tr, atmospheric_light);
   cv::Mat result(img.size(), CV_64FC3);
   model.RecoverImage(result, img);
-  return result;
+  res.push_back(result);
+  return res;
 }
 
 static std::string ResultErrorMessage(const std::string& lwhat,
@@ -123,12 +129,28 @@ void Produce(const std::vector<std::string>& input_pathes,
         images.push_back(load::LoadImg(depth_map_pathes[i]));
       }
       Executor ex(images, type);
-      cv::Mat result_image = ex.Process();
+      auto imgs = ex.Process();
+      cv::Mat result_image = imgs.back();
       load::PathWrapper result_file_path;
       result_file_path.path = result.path / name;
       cv::Mat ui_result_image;
       result_image.convertTo(ui_result_image, CV_8UC3, 255.);
       cv::imwrite(result_file_path.ToString(), ui_result_image);
+      if (type == DEHAZING) {
+        load::PathWrapper result_dc;
+        load::PathWrapper result_tr;
+        std::string ext = name.substr(name.find('.'));
+        result_dc.path =
+            result.path / (name.substr(0, name.find('.')) + "_dc" + ext);
+        result_tr.path =
+            result.path / (name.substr(0, name.find('.')) + "_tr" + ext);
+        cv::Mat ui_dc_image;
+        cv::Mat ui_tr_image;
+        imgs[0].convertTo(ui_dc_image, CV_8UC3, 255.);
+        imgs[1].convertTo(ui_tr_image, CV_8UC3, 255.);
+        cv::imwrite(result_dc.ToString(), ui_dc_image);
+        cv::imwrite(result_tr.ToString(), ui_tr_image);
+      }
     }
   } catch (const std::exception& ex) {
     throw std::runtime_error(ResultErrorMessage(

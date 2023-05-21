@@ -29,15 +29,15 @@ TEST_CASE("image_processor") {
   mats.pop_back();
 
   exec::Executor processor_dehazing(mats, exec::DEHAZING);
-  cv::Mat result_dehazing;
+  std::vector<cv::Mat> result_dehazing;
   REQUIRE_NOTHROW(result_dehazing = processor_dehazing.Process());
   cv::Size s(40, 20);
-  CHECK(result_dehazing.size() == s);
-  CHECK_EQ(result_dehazing.type(), CV_64FC3);
+  CHECK(result_dehazing.back().size() == s);
+  CHECK_EQ(result_dehazing.back().type(), CV_64FC3);
 
   exec::Executor processor_augmenting(mats, exec::DEHAZING);
-  cv::Mat result_augmenting;
+  std::vector<cv::Mat> result_augmenting;
   REQUIRE_NOTHROW(result_augmenting = processor_dehazing.Process());
-  CHECK(result_augmenting.size() == s);
-  CHECK_EQ(result_augmenting.type(), CV_64FC3);
+  CHECK(result_augmenting.back().size() == s);
+  CHECK_EQ(result_augmenting.back().type(), CV_64FC3);
 }
